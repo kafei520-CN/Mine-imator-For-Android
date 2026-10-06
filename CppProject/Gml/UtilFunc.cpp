@@ -1,6 +1,8 @@
 #include "Generated/Scripts.hpp"
 
 #include "AppHandler.hpp"
+#include "AppWindow.hpp"
+#include "Platform/Storage.hpp"
 #include "Asset/DataStructure.hpp"
 
 #include <QApplication>
@@ -9,6 +11,7 @@
 #include <QMessageBox>
 #include <QPushButton>
 #include <QTime>
+#include <cmath>
 
 namespace CppProject
 {
@@ -362,6 +365,16 @@ namespace CppProject
 
 	RealType interface_scale_default_get()
 	{
+	#if defined(OS_ANDROID)
+		// Match StartOnGlSurface: one interface step per ~1400 physical pixels.
+		if (App && App->mainWindow && App->mainWindow->width() > 0)
+		{
+			const int factor = std::clamp(
+				static_cast<int>(std::lround(App->mainWindow->width() / 1400.0)), 1, 3);
+			return factor;
+		}
+		return (App && App->scale > 0.0) ? App->scale : 1.0;
+	#else
 		RealType ratio;
 	#if OS_MAC
 		ratio = qApp->desktop()->logicalDpiX() / 72.0;
@@ -369,6 +382,7 @@ namespace CppProject
 		ratio = qApp->desktop()->logicalDpiX() / 96.0;
 	#endif
 		return (IntType)(ratio + 0.01);
+	#endif
 	}
 
 	void interface_scale_set(RealType factor)
@@ -398,7 +412,9 @@ namespace CppProject
 
 	StringType user_directory_get()
 	{
-	#if OS_WINDOWS
+	#if defined(OS_ANDROID)
+		return QString::fromUtf8(mi_storage_user_dir());
+	#elif OS_WINDOWS
 		return gmlGlobal::working_directory + "Data/";
 	#else
 		return QDir::homePath() + "/Mine-imator/";
@@ -407,7 +423,9 @@ namespace CppProject
 
 	StringType projects_directory_get()
 	{
-	#if OS_WINDOWS
+	#if defined(OS_ANDROID)
+		return QString::fromUtf8(mi_storage_projects_dir());
+	#elif OS_WINDOWS
 		return gmlGlobal::working_directory + "Projects/";
 	#else
 		return QDir::homePath() + "/Mine-imator/Projects/";
@@ -416,7 +434,9 @@ namespace CppProject
 
 	StringType skins_directory_get()
 	{
-	#if OS_WINDOWS
+	#if defined(OS_ANDROID)
+		return QString::fromUtf8(mi_storage_skins_dir());
+	#elif OS_WINDOWS
 		return gmlGlobal::working_directory + "Skins/";
 	#else
 		return QDir::homePath() + "/Mine-imator/Skins/";

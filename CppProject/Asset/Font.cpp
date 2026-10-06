@@ -7,7 +7,12 @@
 #include "Render/Texture.hpp"
 
 #include <ft2build.h>
-#include FT_FREETYPE_H  
+#include FT_FREETYPE_H
+
+#include <QDir>
+#include <QFileInfo>
+#include <QSet>
+#include <cmath>
 
 namespace CppProject
 {
@@ -36,7 +41,15 @@ namespace CppProject
 			if (err != 0) 
 				throw "FT_New_Memory_Face error: " + NumStr(err);
 
-			err = FT_Set_Char_Size(face, 0, size << 6, 96, 96);
+		#if defined(OS_ANDROID)
+			// Rasterize at framebuffer pixels, then store advances in logical units.
+			const RealType pixelScale = (App && App->scale > 0.0) ? App->scale : 1.0;
+			const FT_F26Dot6 ftSize = static_cast<FT_F26Dot6>(
+				std::max<IntType>(1, static_cast<IntType>(std::lround(size * pixelScale))) << 6);
+		#else
+			const FT_F26Dot6 ftSize = static_cast<FT_F26Dot6>(size << 6);
+		#endif
+			err = FT_Set_Char_Size(face, 0, ftSize, 96, 96);
 			if (err != 0)
 				throw "FT_Set_Char_Size error: " + NumStr(err);
 
@@ -45,15 +58,55 @@ namespace CppProject
 			height = ceil((face->height / 64) * scale);
 			descent = ceil((face->descender / 64) * scale);
 
-			// Get number of characters
-			IntType numChars = 0;
+			QVector<FT_ULong> codes;
 			FT_UInt charIndex;
 			FT_ULong charCode = FT_Get_First_Char(face, &charIndex);
 			while (charIndex)
 			{
+				codes.append(charCode);
 				charCode = FT_Get_Next_Char(face, charCode, &charIndex);
-				numChars++;
 			}
+
+			FT_Face cjkFace = nullptr;
+			QByteArray cjkBytes;
+		#if defined(OS_ANDROID)
+			// Rubik and Noto Sans have no Chinese glyphs, so those characters draw as nothing.
+			QFile cjkFile(QFileInfo(filename.QStr()).dir().filePath("NotoSansSC-Regular.otf"));
+			if (cjkFile.open(QFile::ReadOnly))
+			{
+				cjkBytes = cjkFile.readAll();
+				if (FT_New_Memory_Face(ft, (FT_Byte*)cjkBytes.constData(), cjkBytes.size(), 0, &cjkFace) != 0)
+					cjkFace = nullptr;
+				else if (FT_Set_Char_Size(cjkFace, 0, ftSize, 96, 96) != 0)
+					cjkFace = nullptr;
+			}
+			if (cjkFace)
+			{
+				const IntType cjkHeight = ceil(cjkFace->size->metrics.height / 64.0);
+				if (cjkHeight > height)
+					height = cjkHeight;
+				QFile langFile(QFileInfo(filename.QStr()).dir().absoluteFilePath("../Languages/chinese.milanguage"));
+				QSet<uint> seen;
+				for (FT_ULong code : codes)
+					seen.insert(static_cast<uint>(code));
+				if (langFile.open(QFile::ReadOnly))
+				{
+					const QString text = QString::fromUtf8(langFile.readAll());
+					for (const QChar& ch : text)
+					{
+						const uint codePoint = ch.unicode();
+						if (codePoint < 128 || seen.contains(codePoint))
+							continue;
+						if (FT_Get_Char_Index(cjkFace, codePoint) == 0)
+							continue;
+						seen.insert(codePoint);
+						codes.append(codePoint);
+					}
+				}
+			}
+		#endif
+
+			IntType numChars = codes.size();
 
 			// Get atlas dimensions
 			IntType atlasSize = height * ceilf(sqrtf(numChars));
@@ -63,13 +116,17 @@ namespace CppProject
 			memset(pixels, 0, atlasSize * atlasSize);
 			IntType penX = 0, penY = 0;
 
-			charCode = FT_Get_First_Char(face, &charIndex);
-			while (charIndex)
+			for (FT_ULong codePoint : codes)
 			{
-				err = FT_Load_Char(face, charCode, FT_LOAD_RENDER | (fontAA ? FT_LOAD_TARGET_LIGHT : FT_LOAD_MONOCHROME));
-				if (err == 0)
+				FT_Face source = face;
+			#if defined(OS_ANDROID)
+				if (cjkFace && FT_Get_Char_Index(face, codePoint) == 0)
+					source = cjkFace;
+			#endif
+				err = FT_Load_Char(source, codePoint, FT_LOAD_RENDER | (fontAA ? FT_LOAD_TARGET_LIGHT : FT_LOAD_MONOCHROME));
+				if (err == 0 && source->glyph->glyph_index != 0)
 				{
-					FT_Bitmap* bmp = &face->glyph->bitmap;
+					FT_Bitmap* bmp = &source->glyph->bitmap;
 
 					if (penX + (IntType)bmp->width >= atlasSize)
 					{
@@ -94,22 +151,40 @@ namespace CppProject
 						}
 					}
 
-					glyphMap[charCode] = {
+				#if defined(OS_ANDROID)
+					const RealType inv = 1.0 / pixelScale;
+					glyphMap[static_cast<IntType>(codePoint)] = {
 						(float)penX,
 						(float)penY,
 						(float)(penX + bmp->width),
 						(float)(penY + bmp->rows),
-						{ face->glyph->bitmap_left, face->glyph->bitmap_top },
-						{ (int)bmp->width, (int)bmp->rows },
-						face->glyph->advance.x / 64
+						{ (int)std::lround(source->glyph->bitmap_left * inv), (int)std::lround(source->glyph->bitmap_top * inv) },
+						{ (int)std::lround(bmp->width * inv), (int)std::lround(bmp->rows * inv) },
+						(IntType)std::lround((source->glyph->advance.x / 64.0) * inv)
 					};
+				#else
+					glyphMap[static_cast<IntType>(codePoint)] = {
+						(float)penX,
+						(float)penY,
+						(float)(penX + bmp->width),
+						(float)(penY + bmp->rows),
+						{ source->glyph->bitmap_left, source->glyph->bitmap_top },
+						{ (int)bmp->width, (int)bmp->rows },
+						source->glyph->advance.x / 64
+					};
+				#endif
 
 					penX += bmp->width + 1;
 				}
-
-				charCode = FT_Get_Next_Char(face, charCode, &charIndex);
 			}
 			penY += height;
+		#if defined(OS_ANDROID)
+			if (pixelScale != 1.0)
+			{
+				height = std::max<IntType>(1, static_cast<IntType>(std::lround(height / pixelScale)));
+				descent = static_cast<IntType>(std::lround(descent / pixelScale));
+			}
+		#endif
 
 			// Convert UVs
 			for (IntType code : glyphMap.keys())

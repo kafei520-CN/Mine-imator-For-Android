@@ -6,7 +6,7 @@ varying vec4 vColor2;
 
 void main()
 {
-	float checkerSize = 12;
+	float checkerSize = 12.0;
 	vec2 pixel = floor((vTexCoord * uSize) / checkerSize);
 	gl_FragColor = mod(pixel.x + mod(pixel.y, 2.0), 2.0) != 0.0 ? vColor1 : vColor2;
 }

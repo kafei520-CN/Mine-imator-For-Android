@@ -8,6 +8,11 @@
 #include "PrimitiveRenderer.hpp"
 #include "VertexBufferRenderer.hpp"
 
+#if API_OPENGLES
+#include <EGL/egl.h>
+#include <QtPlatformHeaders/QEGLNativeContext>
+#endif
+
 #if API_D3D11
 #include <comdef.h>
 #else
@@ -377,15 +382,22 @@ namespace CppProject
 	{
 		handler = this;
 
+	#if !API_OPENGLES
 		QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+	#endif
 		QApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
 		// Enable OpenGL 4.3 Core
 		QSurfaceFormat format = QSurfaceFormat::defaultFormat();
 		format.setDepthBufferSize(24);
 		format.setStencilBufferSize(8);
+	#if API_OPENGLES
+		format.setRenderableType(QSurfaceFormat::OpenGLES);
+		format.setVersion(3, 1);
+	#else
 		format.setVersion(4, 3);
 		format.setProfile(QSurfaceFormat::CoreProfile);
+	#endif
 	#if DEBUG_MODE
 		format.setOption(QSurfaceFormat::DebugContext);
 	#endif
@@ -394,16 +406,41 @@ namespace CppProject
 
 	void GraphicsApiHandler::Init()
 	{
+	#if !API_OPENGLES
 		if (isInitialized())
 			return;
+	#endif
 
 		// Find version
+	#if API_OPENGLES
+		if (!glContext)
+		{
+			glContext = new QOpenGLContext;
+			const QEGLNativeContext native(eglGetCurrentContext(), eglGetCurrentDisplay());
+			glContext->setNativeHandle(QVariant::fromValue(native));
+			glContext->setFormat(QSurfaceFormat::defaultFormat());
+			if (!glContext->create())
+				FATAL("Could not adopt the GLSurfaceView context");
+		}
+	#else
 		glContext = App->mainWindow->glWidget->context();
+	#endif
 		glVersion = NumStr(glContext->format().version().first) + "." + NumStr(glContext->format().version().second);
 		DEBUG("OpenGL version: " + glVersion);
 
+	#if API_OPENGLES
+		if (!glOffScreenSurface)
+		{
+			glOffScreenSurface = new QOffscreenSurface;
+			glOffScreenSurface->create();
+		}
+		if (!glContext->makeCurrent(glOffScreenSurface))
+			FATAL("Could not make the GLES context current");
+		initializeOpenGLFunctions();
+	#else
 		if (!initializeOpenGLFunctions())
 			FATAL("Could not initialize OpenGL, version is " + glVersion);
+	#endif
 
 		DEBUG("GL_RENDERER: " + QString((char*)glGetString(GL_RENDERER)));
 		DEBUG("GL_VENDOR: " + QString((char*)glGetString(GL_VENDOR)));
@@ -436,9 +473,11 @@ namespace CppProject
 			DEBUG("Could not initialize OpenGL debugger");
 	#endif
 
-		// Create off-screen surface
+		// Create off-screen surface. GLES creates it before initializeOpenGLFunctions().
+	#if !API_OPENGLES
 		glOffScreenSurface = new QOffscreenSurface;
 		glOffScreenSurface->create();
+	#endif
 
 		// Map source/dest modes
 		glBlendMap[bm_zero] = GL_ZERO;
@@ -484,7 +523,11 @@ namespace CppProject
 
 	BoolType GraphicsApiHandler::StartOffScreenRender()
 	{
-		glCurrentVboId = AppWin->glWidget->glVboId;
+		glCurrentVboId = (AppWin && AppWin->glWidget) ? AppWin->glWidget->glVboId : 0;
+	#if API_OPENGLES
+		if (QOpenGLContext::currentContext() == glContext)
+			return true;
+	#endif
 		if (!glContext->makeCurrent(glOffScreenSurface))
 		{
 			WARNING("BeginUse makeCurrent failed");

@@ -47,13 +47,19 @@ typedef double RealType;
 typedef int64_t IntType;
 typedef bool BoolType;
 
-// Pick graphics API
+// Pick graphics API. Android is OpenGL ES, not desktop GL 3.1 and not D3D11.
 #ifdef OS_WINDOWS
 #define API_D3D11 1
 #define API_OPENGL 0
+#define API_OPENGLES 0
+#elif defined(OS_ANDROID)
+#define API_D3D11 0
+#define API_OPENGL 1
+#define API_OPENGLES 1
 #else
 #define API_D3D11 0
 #define API_OPENGL 1
+#define API_OPENGLES 0
 #endif
 
 #if API_OPENGL

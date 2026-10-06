@@ -1,6 +1,7 @@
 #include "World.hpp"
 
 #include "Generated/Scripts.hpp"
+#include "Platform/Storage.hpp"
 
 #include <QDirIterator>
 #include <QStandardPaths>
@@ -91,7 +92,9 @@ namespace CppProject
 
 	StringType world_import_get_saves_dir()
 	{
-	#if OS_WINDOWS
+	#if defined(OS_ANDROID)
+		return QString::fromUtf8(mi_storage_saves_dir());
+	#elif OS_WINDOWS
 		return QFileInfo(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)).path() + "/.minecraft/saves";
 	#elif OS_MAC
 		return QDir::homePath() + "/Library/Application Support/minecraft/saves";

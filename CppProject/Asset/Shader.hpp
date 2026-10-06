@@ -6,7 +6,9 @@
 
 #if API_OPENGL
 #include <QOpenGLShaderProgram>
+#if !API_OPENGLES
 #include <QOpenGLFunctions_4_3_Core>
+#endif
 #endif
 #include <QVector4D>
 
@@ -135,6 +137,9 @@ namespace CppProject
 		static ID3D11InputLayout* d3dInputLayout[4];
 	#else
 		QOpenGLShaderProgram* program = nullptr;
+	#ifndef GL_INVALID_INDEX
+	#define GL_INVALID_INDEX 0xFFFFFFFFu
+	#endif
 		GLuint glSsboId = 0, glSsboBlockIndex = GL_INVALID_INDEX;
 	#endif
 
@@ -216,7 +221,9 @@ namespace CppProject
 		static QString glslVersion;
 		static BoolType gl40Supported; // Required for textureQueryLod
 		static BoolType gl43Supported; // Required for SSBO
+	#if !API_OPENGLES
 		static QOpenGLFunctions_4_3_Core* gl43Core;
+	#endif
 	#endif
 	};
 }

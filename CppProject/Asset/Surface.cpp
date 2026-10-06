@@ -114,6 +114,15 @@ namespace CppProject
 			return false;
 
 		GFX->matrixP = ortho;
+	#if defined(OS_ANDROID)
+		// Viewport stays at the framebuffer size. UI batches read this ortho,
+		// so logical coordinates must cover the physical pixels.
+		if (App && App->mainWindow && App->scale > 0.0 && this == App->mainWindow->GetSurface())
+		{
+			ortho = Matrix::Ortho(0, size.width() / App->scale, size.height() / App->scale, 0, -100, 100);
+			GFX->matrixP = ortho;
+		}
+	#endif
 		return true;
 	}
 

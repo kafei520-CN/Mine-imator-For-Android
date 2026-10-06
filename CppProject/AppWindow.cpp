@@ -1,9 +1,16 @@
 #include "AppWindow.hpp"
 #include "AppHandler.hpp"
+#include "Asset/Shader.hpp"
 #include "Asset/Surface.hpp"
 #include "Render/GLWidget.hpp"
 #include "Render/GraphicsApiHandler.hpp"
+#include "Render/PrimitiveRenderer.hpp"
 #include "Generated/Scripts.hpp"
+
+#if OS_ANDROID
+#include <EGL/egl.h>
+extern "C" void mi_ui_size(int* width, int* height);
+#endif
 
 #include <QMimeData>
 #include <QScreen>
@@ -84,15 +91,25 @@ namespace CppProject
 
 	void AppWindow::ShowNormal()
 	{
+	#if OS_ANDROID
+		return;
+	#else
 		QMainWindow::showNormal();
 	#if API_OPENGL
 		glWidget->widgetRender = true;
+	#endif
 	#endif
 	}
 
 	void AppWindow::Maximize()
 	{
-	#if API_OPENGL
+	#if OS_ANDROID
+		int uiW = 640;
+		int uiH = 360;
+		mi_ui_size(&uiW, &uiH);
+		resize(uiW, uiH);
+		return;
+	#elif API_OPENGL
 		glWidget->hide(); // Mac OS fix
 		QMainWindow::showMaximized();
 		glWidget->show();
@@ -106,14 +123,23 @@ namespace CppProject
 		if (newSize == QSize(0, 0))
 			return;
 
+	#if OS_ANDROID
+		// The splash asks for a 740x450 window. Shrinking to that and then
+		// stretching it over the 2K display crops the card and blows up the pattern.
+		newSize = { 0, 0 };
+		return;
+	#endif
+
 		newSize.rwidth() *= App->scale;
 		newSize.rheight() *= App->scale;
 		QMainWindow::setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, newSize, qApp->primaryScreen()->geometry()));
+	#if !OS_ANDROID
 		QTimer::singleShot(100, [&]()
 			{
 				QMainWindow::showNormal();
 				QMainWindow::activateWindow();
 			});
+	#endif
 
 	#if API_OPENGL
 		glWidget->widgetRender = true;
@@ -155,6 +181,50 @@ namespace CppProject
 
 		// Restore blending
 		D3DContext->OMSetBlendState(prevState, blendFactor, 0xFFFFFFFF);
+	#elif API_OPENGLES
+		if (!glWidget || !glWidget->swapchain[0])
+			return;
+		if (!App->blocked)
+			glWidget->swapchainIndex = 1 - glWidget->swapchainIndex;
+		Surface* shown = glWidget->swapchain[1 - glWidget->swapchainIndex];
+		if (!shown || !PR || !PR->GetShader() || !PR->GetShader()->IsLoaded())
+			return;
+		int fbW = width();
+		int fbH = height();
+		const EGLDisplay display = eglGetCurrentDisplay();
+		const EGLSurface window = eglGetCurrentSurface(EGL_DRAW);
+		if (display != EGL_NO_DISPLAY && window != EGL_NO_SURFACE)
+		{
+			eglQuerySurface(display, window, EGL_WIDTH, &fbW);
+			eglQuerySurface(display, window, EGL_HEIGHT, &fbH);
+		}
+		GFX->glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		GFX->glViewport(0, 0, fbW, fbH);
+		GFX->glClearColor(0.102f, 0.102f, 0.102f, 1.f);
+		GFX->glClear(GL_COLOR_BUFFER_BIT);
+		// UI drawing stores a logical ortho on the swapchain. The blit quad is
+		// in framebuffer pixels, so present with that pixel ortho and put it back.
+		const Matrix uiOrtho = shown->ortho;
+		shown->ortho = Matrix::Ortho(0, shown->size.width(), shown->size.height(), 0, -100, 100);
+		GFX->matrixP = shown->ortho;
+		GFX->shader = PR->GetShader();
+		if (!GFX->shader->BeginUse())
+		{
+			shown->ortho = uiOrtho;
+			return;
+		}
+		GFX->shader->SubmitMatrix(Shader::P, GFX->matrixP);
+		GFX->SetCulling(false);
+		GFX->glDisable(GL_BLEND);
+		gpu_set_texfilter(false);
+		draw_surface_ext(shown->id, 0, 0, 1.0, 1.0, 0.0, -1, 1.0);
+		GFX->SubmitBatch();
+		GFX->shader->EndUse();
+		shown->ortho = uiOrtho;
+		GFX->SetCulling(true);
+		// gpu_set_blendenable() does not turn blending back on. Leave it enabled
+		// so the next frame's translucent sprites and font glyphs are not drawn as black.
+		GFX->glEnable(GL_BLEND);
 	#else
 		// Redo frame if blocked, otherwise flip swapchain index and schedule draw
 		if (!App->blocked)

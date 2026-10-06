@@ -1,9 +1,16 @@
 #include "Common.hpp"
 
+#if defined(OS_ANDROID)
+#include <android/log.h>
+#endif
+
 namespace CppProject
 {
 	void Printer::Line(QString text)
 	{
+	#if defined(OS_ANDROID)
+		__android_log_print(ANDROID_LOG_INFO, "MineImator", "%s", text.toUtf8().constData());
+	#endif
 	#if OS_WINDOWS
 	#if RELEASE_MODE
 		QString logFile = QCoreApplication::applicationDirPath() + "/Data/log.txt";

@@ -41,8 +41,17 @@ namespace CppProject
 		// Create a new AppWindow containing an GLRenderer.
 		AppWindow* AddWindow(QRect rect = {}, IntType id = 0, AppWindow* from = nullptr);
 
+#if defined(OS_ANDROID)
+		// Bind the GLSurfaceView context and create the swapchain surfaces.
+		void StartOnGlSurface(int width, int height);
+#endif
+
 		// Runs once per frame and runs the app logic and drawing to the opened widgets.
 		void timerEvent(QTimerEvent* event) override;
+
+		// One frame of app logic and drawing. The Qt timer only schedules this.
+		// Returns false when the app asked to close.
+		bool StepFrame();
 
 		// Gets the amount of milliseconds since the application started.
 		IntType GetMsec() const;

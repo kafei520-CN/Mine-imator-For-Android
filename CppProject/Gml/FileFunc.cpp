@@ -1,10 +1,15 @@
 #include "Generated/Scripts.hpp"
 
 #include "Asset/TextFile.hpp"
+#include "Platform/Storage.hpp"
 #include "AppHandler.hpp"
 
+#include <string>
+
+#include <QDir>
 #include <QDirIterator>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QJsonParseError>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -203,8 +208,61 @@ namespace CppProject
 		return "";
 	}
 
+	namespace {
+		int g_import_kind = 0;
+		bool g_import_have_path = false;
+		std::string g_import_path;
+	}
+
+	extern "C" void mi_android_import_set(int kind)
+	{
+		g_import_kind = kind;
+	}
+
+	extern "C" void mi_pick_begin();
+	extern "C" int mi_pick_poll(char* buf, int cap);
+
+	extern "C" int mi_android_import_pump()
+	{
+		if (g_import_kind == 0 || g_import_have_path)
+			return 0;
+		char buf[1024];
+		buf[0] = '\0';
+		if (mi_pick_poll(buf, static_cast<int>(sizeof(buf))) == 0)
+			return 0;
+		if (buf[0] == '\0')
+		{
+			g_import_kind = 0;
+			return 0;
+		}
+		g_import_path = buf;
+		g_import_have_path = true;
+		return g_import_kind;
+	}
+
 	StringType get_open_filename_ext(StringType filter, StringType file, StringType dir, StringType caption)
 	{
+	#if defined(OS_ANDROID)
+		Q_UNUSED(filter)
+		Q_UNUSED(file)
+		Q_UNUSED(dir)
+		Q_UNUSED(caption)
+		if (g_import_have_path)
+		{
+			const QString path = QString::fromUtf8(g_import_path.c_str());
+			g_import_path.clear();
+			g_import_have_path = false;
+			g_import_kind = 0;
+			return path;
+		}
+		if (g_import_kind != 0)
+		{
+			// Return at once so the GL thread can keep drawing while the picker is open.
+			mi_pick_begin();
+			return "";
+		}
+		return QString::fromUtf8(mi_storage_pick_open());
+	#else
 		QFileDialog fd;
 		fd.setModal(true);
 		fd.setAcceptMode(QFileDialog::AcceptOpen);
@@ -226,10 +284,44 @@ namespace CppProject
 		if (files.size() > 0)
 			return files[0];
 		return "";
+	#endif
 	}
 
 	StringType get_save_filename_ext(StringType filter, StringType file, StringType dir, StringType caption)
 	{
+	#if defined(OS_ANDROID)
+		// QFileDialog needs a real Qt window. Write into the project folder instead.
+		Q_UNUSED(caption)
+		QString folder = dir;
+		if (folder.isEmpty())
+			folder = QString::fromUtf8(mi_storage_projects_dir());
+		if (!folder.endsWith('/'))
+			folder += '/';
+		QDir().mkpath(folder);
+		QString name = file;
+		if (name.isEmpty())
+			name = "Mine-imator";
+		const QString suffix = GetFilenameFilterDefaultSuffix(filter);
+		if (!suffix.isEmpty() && !name.endsWith("." + suffix, Qt::CaseInsensitive))
+			name += "." + suffix;
+		QString path = folder + name;
+		if (QFileInfo::exists(path))
+		{
+			const QString base = QFileInfo(name).completeBaseName();
+			const QString ext = QFileInfo(name).suffix();
+			for (int i = 2; i < 1000; ++i)
+			{
+				const QString candidate = folder + base + " " + QString::number(i) + (ext.isEmpty() ? QString() : "." + ext);
+				if (!QFileInfo::exists(candidate))
+				{
+					path = candidate;
+					break;
+				}
+			}
+		}
+		qWarning("save %s", path.toUtf8().constData());
+		return path;
+	#else
 		QFileDialog fd;
 		fd.setModal(true);
 		fd.setAcceptMode(QFileDialog::AcceptSave);
@@ -259,6 +351,7 @@ namespace CppProject
 			return filename;
 		}
 		return "";
+	#endif
 	}
 
 	IntType json_load_from_string(StringType json, IntType typeMapId = 0)
@@ -381,7 +474,8 @@ namespace CppProject
 		IntType typeMap = 0;
 		if (args.Size() > 1)
 			typeMap = args[1];
-		return json_load_from_string(file.readAll(), typeMap);
+		// QString(QByteArray) decodes as Latin-1. Language files are UTF-8, so Chinese became the wrong code points and drew as missing glyphs.
+		return json_load_from_string(QString::fromUtf8(file.readAll()), typeMap);
 	}
 
 	StringType json_string_encode(StringType arg)

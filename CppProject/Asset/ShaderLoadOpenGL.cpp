@@ -1,6 +1,8 @@
 #if API_OPENGL
+#if !API_OPENGLES
 #undef __glext_h_
 #include <qopenglext.h>
+#endif
 
 #include "Shader.hpp"
 #include "Render/GraphicsApiHandler.hpp"
@@ -64,10 +66,12 @@ namespace CppProject
 			if (code.contains("texture2D("))
 			{
 				QString setLod = "";
+			#if !API_OPENGLES
 				if (gl40Supported)
 					setLod = "\tvec2 uvLod = uvRect.xy + uv * uvRect.zw;\n"
 					"\tuvLod.y = 1.0 - uvLod.y;\n"
 					"\tlod = textureQueryLod(s, uvLod).y;\n";
+			#endif
 				header += "\n"
 					"vec4 _sampleUvRect(sampler2D s, vec4 uvRect, bool repeat, vec2 uv)\n"
 					"{\n"
@@ -94,11 +98,25 @@ namespace CppProject
 				header += "in uint _aNormal;\n"
 					"in uint _aColor;\n"
 					"in uint _aData;\n"
-					"in uint _aTangent;\n"
-					"vec3 in_Normal = " UNPACK_VERTEX_NORMAL("_aNormal") ";\n"
+					"in uint _aTangent;\n";
+			#if API_OPENGLES
+				// GLSL ES 3.00 rejects non-constant global initializers.
+				header += "vec3 in_Normal;\nvec4 in_Colour;\nvec4 in_Wave;\nvec3 in_Tangent;\n";
+				QString unpack =
+					"\tin_Normal = " UNPACK_VERTEX_NORMAL("_aNormal") ";\n"
+					"\tin_Colour = " UNPACK_VERTEX_COLOR("_aColor") ";\n"
+					"\tin_Wave = " UNPACK_VERTEX_WAVE("_aData") ";\n"
+					"\tin_Tangent = " UNPACK_VERTEX_NORMAL("_aTangent") ";\n";
+				int mainAt = code.indexOf("void main()");
+				int brace = mainAt >= 0 ? code.indexOf('{', mainAt) : -1;
+				if (brace >= 0)
+					code.insert(brace + 1, "\n" + unpack);
+			#else
+				header += "vec3 in_Normal = " UNPACK_VERTEX_NORMAL("_aNormal") ";\n"
 					"vec4 in_Colour = " UNPACK_VERTEX_COLOR("_aColor") ";\n"
 					"vec4 in_Wave = " UNPACK_VERTEX_WAVE("_aData") ";\n"
 					"vec3 in_Tangent = " UNPACK_VERTEX_NORMAL("_aTangent") ";\n";
+			#endif
 			}
 
 			if (useBatching)
@@ -164,7 +182,11 @@ namespace CppProject
 
 		// Add defines
 		QString defines = "#version " + glslVersion + "\n";
+	#if API_OPENGLES
+		defines += "precision mediump float;\n";
+	#else
 		defines += "#extension GL_ARB_explicit_attrib_location : enable\n";
+	#endif
 
 		// Add UvRect & TexRepeat uniform
 		if (numSamplers > 0)
@@ -258,8 +280,12 @@ namespace CppProject
 			GFX->glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 			GL_CHECK_ERROR();
 
-			// Get block index
+			// Get block index. GLES has no program-resource API for SSBOs.
+		#if !API_OPENGLES
 			glSsboBlockIndex = gl43Core->glGetProgramResourceIndex(program->programId(), GL_SHADER_STORAGE_BLOCK, "_ssbo");
+		#else
+			glSsboBlockIndex = GL_INVALID_INDEX;
+		#endif
 		}
 
 		program->release();

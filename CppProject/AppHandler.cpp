@@ -11,6 +11,7 @@
 #include "Render/GraphicsApiHandler.hpp"
 #include "Render/PrimitiveRenderer.hpp"
 #include "Render/TexturePage.hpp"
+#include "Platform/Storage.hpp"
 #include "Render/VertexBufferRenderer.hpp"
 
 #include <QDesktopWidget>
@@ -21,6 +22,9 @@
 #include <QStyle>
 #include <QTimer>
 #include <QStandardPaths>
+#include <cmath>
+
+#include "Platform/FrameBridge.hpp"
 
 #ifdef OS_WINDOWS
 #define USE_GPU 1
@@ -95,12 +99,20 @@ namespace CppProject
 			// Create temporary folder
 		#if OS_WINDOWS
 			gmlGlobal::game_save_id = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation)[0] + "/";
+		#elif defined(OS_ANDROID)
+			// MuMu's Qt temp path is empty, so tempPath() becomes /Mine-imator_tmp/ and mkdir fails.
+			QString tempRoot = QString::fromUtf8(mi_storage_cache_dir());
+			if (tempRoot.isEmpty())
+				tempRoot = QString::fromUtf8(mi_storage_user_dir());
+			if (!tempRoot.endsWith('/'))
+				tempRoot += '/';
+			gmlGlobal::game_save_id = tempRoot + QString(PROJECT_NAME) + "_tmp/";
 		#else
 			gmlGlobal::game_save_id = QDir::tempPath() + "/" + StringType(PROJECT_NAME) + "_tmp/";
 		#endif
 			if (QDir(gmlGlobal::game_save_id).exists())
 				DEBUG("Found temporary folder " + gmlGlobal::game_save_id);
-			else if (QDir().mkdir(gmlGlobal::game_save_id))
+			else if (QDir().mkpath(gmlGlobal::game_save_id))
 				DEBUG("Created temporary folder " + gmlGlobal::game_save_id);
 			else
 				FATAL("Could not create temporary folder " + gmlGlobal::game_save_id);
@@ -192,8 +204,10 @@ namespace CppProject
 				audioSupported = false;
 			}
 
-			// Create main window
+			// Create main window. Android creates it after the GLES context exists.
+		#if !OS_ANDROID
 			AddWindow();
+		#endif
 
 		}
 		catch (const QString& ex)
@@ -247,8 +261,10 @@ namespace CppProject
 
 		DEBUG("Resources loaded");
 
-		// Start application loop
+		// Android frames are driven by the GLSurfaceView thread.
+	#if !OS_ANDROID
 		stepTimer.start(10, this);
+	#endif
 	}
 
 	AppWindow* AppHandler::AddWindow(QRect rect, IntType id, AppWindow* from)
@@ -262,6 +278,12 @@ namespace CppProject
 		if (!mainWindow)
 			mainWindow = win;
 
+	#if OS_ANDROID
+		// QOpenGLWidget::show() resizes into a context this surface does not own.
+		win->setAttribute(Qt::WA_DontShowOnScreen, true);
+		if (!rect.isEmpty())
+			win->resize(rect.size());
+	#else
 		if (rect == QRect()) // Show minimized if no rect given
 			win->showMinimized();
 		
@@ -275,15 +297,46 @@ namespace CppProject
 			win->setGeometry(rect);
 			win->ShowNormal();
 		}
+	#endif
 
 		win->UpdateSize();
 		return win;
 	}
 
-	void AppHandler::timerEvent(QTimerEvent* event)
-	{
-		stepTimer.stop();
+#if OS_ANDROID
+	extern "C" void mi_set_ui_size(int width, int height);
 
+	void AppHandler::StartOnGlSurface(int width, int height)
+	{
+		// The swapchain is the real framebuffer. Interface scale keeps layout
+		// near 1400 logical pixels wide, in whole steps so sprites stay even.
+		const int factor = std::clamp(static_cast<int>(std::lround(width / 1400.0)), 1, 3);
+		if (Font::fonts.isEmpty())
+			scale = factor;
+		mi_set_ui_size(width, height);
+		qWarning("UI scale %d physical %dx%d logical %dx%d",
+			factor, width, height, width / factor, height / factor);
+
+		if (!mainWindow)
+			AddWindow(QRect(0, 0, width, height));
+		else if (mainWindow->width() != width || mainWindow->height() != height)
+			mainWindow->resize(width, height);
+
+		GLWidget* widget = mainWindow->glWidget;
+		if (widget && !widget->swapchain[0])
+		{
+			widget->swapchain[0] = new Surface;
+			widget->swapchain[1] = new Surface;
+		}
+		if (GFX && !GFX->glContext)
+			GFX->Init();
+		WARNING("GL surface " + NumStr(width) + "x" + NumStr(height)
+			+ " window " + NumStr(mainWindow->width()) + "x" + NumStr(mainWindow->height()));
+	}
+#endif
+
+	bool AppHandler::StepFrame()
+	{
 		// Debug
 		if (keyboard_check_pressed(vk_f6) && dev_mode)
 		{
@@ -324,7 +377,12 @@ namespace CppProject
 
 			GFX->ClearDepth();
 			GFX->shader = PR->GetShader();
+		#if API_OPENGLES
+			if (!GFX->shader || !GFX->shader->BeginUse())
+				continue;
+		#else
 			GFX->shader->BeginUse();
+		#endif
 			
 			// Run application
 			try
@@ -348,7 +406,7 @@ namespace CppProject
 					GFX->surface->EndUse();
 				mainWindow->closing = true;
 				mainWindow->close();
-				return;
+				return false;
 			}
 			catch (const QString& ex)
 			{
@@ -419,6 +477,16 @@ namespace CppProject
 
 		// Delete finished sounds
 		SoundInstance::CleanSounds();
+
+		return true;
+	}
+
+	void AppHandler::timerEvent(QTimerEvent* event)
+	{
+		stepTimer.stop();
+		mi_step_frame(nullptr);
+		if (mainWindow && mainWindow->closing)
+			return;
 
 		// Schedule next step
 		fpsTimer.Reset();
@@ -576,4 +644,28 @@ namespace CppProject
 
 		app_event_http(ScopeAny(global::_app->id));
 	}
+}
+
+extern "C" int mi_editor_ready(void);
+
+extern "C" void mi_step_frame(const MiFrameInput* input)
+{
+	using CppProject::AppHandler;
+	if (!AppHandler::handler)
+		return;
+#if OS_ANDROID
+	if (!mi_editor_ready())
+		return;
+#endif
+	if (input && AppHandler::handler->mainWindow)
+	{
+		AppHandler::handler->mainWindow->mousePos =
+			QPoint(static_cast<int>(input->x), static_cast<int>(input->y));
+	}
+	AppHandler::handler->StepFrame();
+}
+
+extern "C" int mi_app_running(void)
+{
+	return CppProject::AppHandler::handler != nullptr;
 }

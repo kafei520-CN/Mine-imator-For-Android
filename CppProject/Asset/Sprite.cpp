@@ -35,8 +35,21 @@ namespace CppProject
 
 		for (int f = 0; f < numFrames; f++)
 		{
+		#if OS_ANDROID
+			QImage image(QString(ASSETS_DIR) + "/Sprites/" + name + "_frame_" + NumStr(f) + ".png");
+		#else
 			QImage image(":/Sprites/" + name + "_frame_" + NumStr(f) + ".png");
+		#endif
 			image.convertTo(QImage::Format_RGBA8888);
+		#if OS_ANDROID
+			if (image.isNull())
+			{
+				static int missing = 0;
+				if (missing < 8)
+					WARNING("Sprite missing " + name + "_frame_" + NumStr(f));
+				missing++;
+			}
+		#endif
 			size = image.size();
 			frames.append(new Frame(image, true));
 		}

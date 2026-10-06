@@ -7,10 +7,48 @@
 
 #define GFX GraphicsApiHandler::handler
 
-#if API_OPENGL
+#if API_OPENGLES
+#include <QOpenGLExtraFunctions>
+#include <QOffscreenSurface>
+#ifndef GL_RGBA32F
+#define GL_RGBA32F 0x8814
+#endif
+#ifndef GL_DEPTH24_STENCIL8
+#define GL_DEPTH24_STENCIL8 0x88F0
+#endif
+#ifndef GL_DRAW_FRAMEBUFFER_BINDING
+#define GL_DRAW_FRAMEBUFFER_BINDING 0x8CA6
+#endif
+#ifndef GL_DEPTH_STENCIL_ATTACHMENT
+#define GL_DEPTH_STENCIL_ATTACHMENT 0x821A
+#endif
+#ifndef GL_DEPTH_STENCIL
+#define GL_DEPTH_STENCIL 0x84F9
+#endif
+#ifndef GL_UNSIGNED_INT_24_8
+#define GL_UNSIGNED_INT_24_8 0x84FA
+#endif
+#ifndef GL_STACK_OVERFLOW
+#define GL_STACK_OVERFLOW 0x0503
+#endif
+#ifndef GL_STACK_UNDERFLOW
+#define GL_STACK_UNDERFLOW 0x0504
+#endif
+#ifndef GL_TEXTURE_LOD_BIAS
+#define GL_TEXTURE_LOD_BIAS 0x8501
+#endif
+#ifndef GL_SHADER_STORAGE_BUFFER
+#define GL_SHADER_STORAGE_BUFFER 0x90D2
+#endif
+#ifndef GL_DYNAMIC_COPY
+#define GL_DYNAMIC_COPY 0x88EA
+#endif
+#elif API_OPENGL
 #include <QOpenGLFunctions_3_1>
 #include <QOffscreenSurface>
+#endif
 
+#if API_OPENGL
 #if DEBUG_MODE
 #define GL_CHECK_ERROR() GFX->CheckGLError(__FUNCTION__, __LINE__)
 #else
@@ -38,7 +76,9 @@ namespace CppProject
 	struct FrameBuffer;
 
 	struct GraphicsApiHandler
-	#if API_OPENGL
+	#if API_OPENGLES
+		: QOpenGLExtraFunctions
+	#elif API_OPENGL
 		: QOpenGLFunctions_3_1
 	#endif
 	{

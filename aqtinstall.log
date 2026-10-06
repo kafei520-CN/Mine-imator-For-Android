@@ -1,0 +1,62 @@
+2026-10-01 21:26:33,818 - aqt.helper - DEBUG - helper 28268 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/android/qt5_5152/Updates.xml.sha256
+2026-10-01 21:26:48,880 - aqt.helper - DEBUG - helper 41716 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/android/qt5_5152/Updates.xml.sha256
+2026-10-01 21:27:33,927 - aqt.main - INFO - installer 9376 aqtinstall(aqt) v3.3.0 on Python 3.11.15 [CPython MSC v.1944 64 bit (AMD64)]
+2026-10-01 21:27:33,928 - aqt.helper - DEBUG - helper 9376 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/android/qt5_5152/Updates.xml.sha256
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376 DRY RUN: Would download and install the following:
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtbase: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtconnectivity: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtconnectivity-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtandroidextras: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtandroidextras-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtwebchannel: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtwebchannel-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtmultimedia: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtmultimedia-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qttranslations: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qttranslations-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtgraphicaleffects: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtgraphicaleffects-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtsvg: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtsvg-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtdeclarative: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtdeclarative-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtwebsockets: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtwebsockets-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtimageformats: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtimageformats-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qttools: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qttools-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtxmlpatterns: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtxmlpatterns-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,710 - aqt.installer - INFO - installer 9376   - qtsensors: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtsensors-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - qtserialport: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtserialport-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - qtlocation: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtlocation-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - qtquickcontrols: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtquickcontrols-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - qtquickcontrols2: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtquickcontrols2-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - qt3d: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qt3d-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - qtwebview: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtwebview-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - qtscxml: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtscxml-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - qtgamepad: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtgamepad-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - qtspeech: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtspeech-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - qtremoteobjects: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtremoteobjects-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376   - x86_64: online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738x86_64-8.1.0-release-posix-seh-rt_v6-rev0-runtime.7z
+2026-10-01 21:27:35,711 - aqt.installer - INFO - installer 9376 Total packages: 25
+2026-10-01 21:27:59,303 - aqt.main - INFO - installer 16308 aqtinstall(aqt) v3.3.0 on Python 3.11.15 [CPython MSC v.1944 64 bit (AMD64)]
+2026-10-01 21:27:59,303 - aqt.helper - DEBUG - helper 16308 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/android/qt5_5152/Updates.xml.sha256
+2026-10-01 21:28:02,239 - aqt.helper - DEBUG - helper 38244 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z.sha256
+2026-10-01 21:28:03,507 - aqt.helper - INFO - helper 38244 Downloading qtbase...
+2026-10-01 21:28:03,507 - aqt.installer - DEBUG - installer 38244 Download URL: https://download.qt.io/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:28:04,470 - aqt.helper - DEBUG - helper 38244 Asked to redirect(302) to: https://mirror.ossplanet.net/qtproject/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:28:04,470 - aqt.helper - INFO - helper 38244 Redirected: mirror.ossplanet.net
+2026-10-01 21:28:28,681 - aqt.helper - WARNING - helper 38244 Connection to 'https://download.qt.io' failed. Retrying with fallback 'https://mirrors.aliyun.com/qt/'.
+2026-10-01 21:28:28,682 - aqt.installer - DEBUG - installer 38244 Download URL: https://mirrors.aliyun.com/qt/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:35:06,830 - aqt.main - INFO - installer 10588 aqtinstall(aqt) v3.3.0 on Python 3.11.15 [CPython MSC v.1944 64 bit (AMD64)]
+2026-10-01 21:35:06,830 - aqt.helper - DEBUG - helper 10588 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/android/qt5_5152/Updates.xml.sha256
+2026-10-01 21:35:09,026 - aqt.helper - DEBUG - helper 10428 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z.sha256
+2026-10-01 21:35:09,968 - aqt.helper - INFO - helper 10428 Downloading qtbase...
+2026-10-01 21:35:09,968 - aqt.installer - DEBUG - installer 10428 Download URL: https://mirrors.tuna.tsinghua.edu.cn/qt/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:35:10,244 - aqt.helper - INFO - helper 10428 Downloading qtbase: attempt #2...
+2026-10-01 21:35:10,244 - aqt.installer - DEBUG - installer 10428 Download URL: https://mirrors.tuna.tsinghua.edu.cn/qt/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:35:10,788 - aqt.helper - INFO - helper 10428 Downloading qtbase: attempt #3...
+2026-10-01 21:35:10,789 - aqt.installer - DEBUG - installer 10428 Download URL: https://mirrors.tuna.tsinghua.edu.cn/qt/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:35:12,858 - aqt.helper - INFO - helper 10428 Downloading qtbase: attempt #4...
+2026-10-01 21:35:12,858 - aqt.installer - DEBUG - installer 10428 Download URL: https://mirrors.tuna.tsinghua.edu.cn/qt/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:35:13,079 - aqt.helper - INFO - helper 10428 Downloading qtbase: attempt #5...
+2026-10-01 21:35:13,079 - aqt.installer - DEBUG - installer 10428 Download URL: https://mirrors.tuna.tsinghua.edu.cn/qt/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:35:13,298 - aqt.installer - WARNING - installer 10588 Caught ArchiveChecksumError, terminating installer workers
+2026-10-01 21:35:13,308 - aqt.main - ERROR - installer 10588 Downloaded file 5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z is corrupted! Detect checksum error.
+Expect e6f10a9c817c8818ad32060cc4b31b9dc1dd184d9792ef604fb74fefbe103752: https://mirrors.tuna.tsinghua.edu.cn/qt/online/qtsdkrepository/windows_x86/android/qt5_5152/qt.qt5.5152.android/5.15.2-0-202011130738qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+Actual 530e84137b34f424622919c646e12dd73dd928fda97d9b9a6b5422f28f12fbbb: qtbase-Windows-Windows_10-Clang-Android-Android_ANY-Multi.7z
+2026-10-01 21:35:31,075 - aqt.main - INFO - installer 23952 aqtinstall(aqt) v3.3.0 on Python 3.11.15 [CPython MSC v.1944 64 bit (AMD64)]
+2026-10-01 21:35:31,077 - aqt.helper - DEBUG - helper 23952 Attempt to download checksum at https://download.qt.io/online/qtsdkrepository/windows_x86/android/qt5_5152/Updates.xml.sha256
+2026-10-01 21:35:33,600 - aqt.main - ERROR - installer 23952 Failed to locate XML data for Qt version '5.15.2'.
+==============================Suggested follow-up:==============================
+* Please use 'aqt list-qt windows android' to show versions available.

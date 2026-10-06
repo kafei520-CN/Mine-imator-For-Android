@@ -5,6 +5,10 @@
 #include "Asset/Buffer.hpp"
 #include "GZIP.hpp"
 
+#ifdef OS_ANDROID
+#include <thread>
+#endif
+
 #define BLOCK_MESH_CACHE_ENABLED 1
 #define BLOCK_MESH_CACHE_FORMAT 2
 
@@ -590,10 +594,9 @@ namespace CppProject
 		tmr.Print("Write block mesh cache");
 
 		// Compress on a new thread
-		QThread* thread;
 		QString outName = filename.QStr();
 		QString tempName = (QString)gmlGlobal::game_save_id + QFileInfo(filename).fileName();
-		thread = QThread::create([outName, tempName, data]
+		auto compressCache = [outName, tempName, data]
 		{
 			Timer tmr;
 			QFile outFile(outName);
@@ -605,8 +608,14 @@ namespace CppProject
 			tempFile.copy(outName);
 			tempFile.remove();
 			tmr.Print("Compress block mesh cache");
-		});
+		};
+#if API_OPENGLES
+		// Android Qt 5.15.2 sets QT_FEATURE_cxx11_future to -1, so QThread::create is not declared.
+		std::thread(std::move(compressCache)).detach();
+#else
+		QThread* thread = QThread::create(std::move(compressCache));
 		thread->start();
+#endif
 	}
 
 	BoolType res_load_block_cache(Scope<obj_resource> self, StringType filename)

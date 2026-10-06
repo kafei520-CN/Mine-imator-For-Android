@@ -23,9 +23,9 @@ void main()
 	vUvScale = vec2(0.0);
 
 	vec3 normal = abs(in_Normal);
-	if (normal.x >= 1) vUvScale = 1.0 / vec2(uBoxSize.y, uBoxSize.z);
-	if (normal.y >= 1) vUvScale = 1.0 / vec2(uBoxSize.x, uBoxSize.z);
-	if (normal.z >= 1) vUvScale = 1.0 / vec2(uBoxSize.x, uBoxSize.y);
+	if (normal.x >= 1.0) vUvScale = 1.0 / vec2(uBoxSize.y, uBoxSize.z);
+	if (normal.y >= 1.0) vUvScale = 1.0 / vec2(uBoxSize.x, uBoxSize.z);
+	if (normal.z >= 1.0) vUvScale = 1.0 / vec2(uBoxSize.x, uBoxSize.y);
 
 	if (vec3_equals(in_Normal, uResizeDir))
 		vAlpha = 0.6;

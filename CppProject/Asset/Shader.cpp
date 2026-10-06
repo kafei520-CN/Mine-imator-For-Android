@@ -14,7 +14,9 @@
 
 #if API_OPENGL
 #undef __glext_h_
+#if !API_OPENGLES
 #include <qopenglext.h>
+#endif
 
 #define ENABLE_OPENGL_43 1
 #endif
@@ -58,7 +60,11 @@ namespace CppProject
 		"gm_Matrices[MATRIX_PROJECTION]"
 	};
 
-#if API_OPENGL
+#if API_OPENGLES
+	QString Shader::glslVersion = "300 es";
+	BoolType Shader::gl40Supported = false;
+	BoolType Shader::gl43Supported = false;
+#elif API_OPENGL
 	QString Shader::glslVersion = "150 core"; // 3.2
 	BoolType Shader::gl40Supported = false;
 	BoolType Shader::gl43Supported = false;
@@ -83,7 +89,9 @@ namespace CppProject
 
 	void Shader::Init()
 	{
-	#if API_OPENGL
+	#if API_OPENGLES
+		DEBUG("GLSL version " + glslVersion);
+	#elif API_OPENGL
 		// Try compiling with a GLSL 4.0 feature (textureQueryLod) and GLSL 4.3 feature (SSBOs) to determine support
 		QString gl43shader = "#version 430\nlayout(std430, binding = 2) buffer _ssbo { struct { int a; } _obj[1024]; };\nvoid main() {}";
 		QString gl40shader = "#version 400\nuniform sampler2D _sampler;\nout vec2 _lod;\nvoid main() { _lod = textureQueryLod(_sampler, vec2(0.0, 0.0)); }";
@@ -244,7 +252,7 @@ namespace CppProject
 			memset(batchBufferData, 0, batchBufferSize);
 			batchBufferObjectIndex = 0;
 
-		#if API_OPENGL
+		#if API_OPENGL && !API_OPENGLES
 			// Bind SSBO
 			gl43Core->glShaderStorageBlockBinding(program->programId(), glSsboBlockIndex, 2);
 			GL_CHECK_ERROR();
@@ -676,7 +684,10 @@ namespace CppProject
 				GFX->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 				GFX->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
 				GFX->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+			#if !API_OPENGLES
+				// GLES rejects GL_TEXTURE_LOD_BIAS on glTexParameteri.
 				GFX->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, GFX->lodBias);
+			#endif
 				GL_CHECK_ERROR();
 
 				program->setUniformValue(state.glLocation, (GLint)s);
